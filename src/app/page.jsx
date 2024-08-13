@@ -179,27 +179,25 @@ export default function MoviesPage() {
         ))}
       </div> */}
 
-<div className="text-center mb-8">
-  <div className="flex items-center justify-center max-w-md mx-auto">
-    <div className="flex items-center w-full px-4 py-2 bg-gray-800 rounded-lg shadow-lg">
-      <input
-        type="text"
-        className="w-full bg-transparent text-white placeholder-gray-400 focus:outline-none"
-        placeholder="Search for a movie..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-      />
-      <button
-        type="button"
-        className="text-white ml-3 focus:outline-none focus:ring-0"
-      >
-        <IoSearchSharp size={24} />
-      </button>
-    </div>
-  </div>
-</div>
-
-
+      <div className="text-center mb-8">
+        <div className="flex  items-center max-w-md mx-auto">
+          <div className="flex items-center w-full px-4 py-2 bg-gray-800 rounded-lg shadow-lg">
+            <input
+              type="text"
+              className="w-full bg-transparent text-white placeholder-gray-400 focus:outline-none"
+              placeholder="Search for a movie..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button
+              type="button"
+              className="text-white ml-3 focus:outline-none focus:ring-0"
+            >
+              <IoSearchSharp size={24} />
+            </button>
+          </div>
+        </div>
+      </div>
 
       {searchResults.length > 0 && (
         <>
@@ -216,26 +214,26 @@ export default function MoviesPage() {
         </>
       )}
 
-{recommendedMovies.length > 0 && (
-            <>
-              <h1 className="text-4xl font-bold text-center">Recommended Movies</h1>
-              <div className="flex flex-wrap gap-4 p-8">
-                {recommendedMovies.map((movie) => (
-                  <Movie
-                    movie={movie}
-                    key={movie.id}
-                    isSeen={seenMovies.some(seenMovie => seenMovie.id === movie.id)}
-                    onRating={(type) => handleRating(movie, type)}
-                  />
-                ))}
-              </div>
-            </>
-          )}
+      {recommendedMovies.length > 0 && (
+        <>
+          <h1 className="text-4xl font-bold text-center">Recommended Movies</h1>
+          <div className="flex flex-wrap justify-center  gap-4 p-8">
+            {recommendedMovies.map((movie) => (
+              <Movie
+                movie={movie}
+                key={movie.id}
+                isSeen={seenMovies.some(seenMovie => seenMovie.id === movie.id)}
+                onRating={(type) => handleRating(movie, type)}
+              />
+            ))}
+          </div>
+        </>
+      )}
 
       {!searchQuery && (
         <>
           <h1 className="text-4xl font-bold text-center">Rate some movies to be able to recommend new ones</h1>
-          <div className="flex flex-wrap gap-4 p-8">
+          <div className="flex flex-wrap justify-center gap-4 p-8">
             {movies.map((movie) => (
               <Movie
                 movie={movie}
@@ -251,7 +249,7 @@ export default function MoviesPage() {
           {hatedMovies.length > 0 && (
             <>
               <h1 className="text-4xl font-bold text-center">Movies You Might Hate</h1>
-              <div className="flex flex-wrap gap-4 p-8">
+              <div className="flex flex-wrap justify-center gap-4 p-8">
                 {hatedMovies.map((movie) => (
                   <Movie
                     movie={movie}
