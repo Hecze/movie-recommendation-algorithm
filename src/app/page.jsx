@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { FaThumbsUp, FaThumbsDown } from 'react-icons/fa';
+import { IoSearchSharp } from "react-icons/io5";
 
 // Función para obtener las películas y géneros
 async function getMovies() {
@@ -39,6 +40,30 @@ async function getMovies() {
   }));
 }
 
+// Nueva función para buscar películas
+async function searchMovies(query) {
+  const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+  const res = await fetch(`https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(query)}&api_key=${API_KEY}&language=en-ES`);
+  const data = await res.json();
+
+  if (!data.results) return [];
+
+  const genresRes = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${API_KEY}&language=en-ES`);
+  const genresData = await genresRes.json();
+  const genresMap = genresData.genres.reduce((map, genre) => {
+    map[genre.id] = genre.name;
+    return map;
+  }, {});
+
+  return data.results.map(movie => ({
+    id: movie.id,
+    title: movie.title,
+    poster_path: movie.poster_path,
+    vote_average: movie.vote_average,
+    genre_ids: movie.genre_ids.map(id => genresMap[id]),
+  }));
+}
+
 // Componente principal de la página
 export default function MoviesPage() {
   const [seenMovies, setSeenMovies] = useState([]); // Películas ya vistas
@@ -46,6 +71,8 @@ export default function MoviesPage() {
   const [userVector, setUserVector] = useState({}); // Vector del usuario
   const [recommendedMovies, setRecommendedMovies] = useState([]); // Películas recomendadas
   const [hatedMovies, setHatedMovies] = useState([]); // Películas que probablemente odie
+  const [searchResults, setSearchResults] = useState([]); // Resultados de búsqueda
+  const [searchQuery, setSearchQuery] = useState(''); // Query de búsqueda
 
   // Define una variable para la influencia de la calidad en el rating
   const QUALITY_INFLUENCE = 0.3; // Puedes ajustar este valor según tus necesidades. valor entre 0 y 0.5
@@ -62,56 +89,61 @@ export default function MoviesPage() {
   // Actualizar recomendaciones y películas odiadas cuando cambia el vector del usuario
   useEffect(() => {
     updateRecommendations(movies, userVector);
-    console.log('User vector updated:', userVector);
   }, [userVector, movies]);
+
+  // Buscar películas cuando cambia el query de búsqueda
+  useEffect(() => {
+    if (searchQuery) {
+      const fetchSearchResults = async () => {
+        const results = await searchMovies(searchQuery);
+        // Filtrar películas que ya se han visto
+        const filteredResults = results.filter(
+          (movie) => !seenMovies.some((seenMovie) => seenMovie.id === movie.id)
+        );
+        setSearchResults(filteredResults);
+      };
+      fetchSearchResults();
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchQuery]);
 
   // Función para manejar el like/dislike de una película
   const handleRating = (movie, type) => {
     const alreadySeen = seenMovies.some(seenMovie => seenMovie.id === movie.id);
 
-    // Calcular el peso basado en la calidad de la película
-    // console.log('Movie:', movie.title, 'Rating:', movie.vote_average);
     const ratingWeight = type === 'like'
-      ? movie.vote_average * (1 + QUALITY_INFLUENCE) // Potencia aumenta si es un "like"
-      : -movie.vote_average * (1 - QUALITY_INFLUENCE); // Potencia disminuye si es un "dislike"
+      ? movie.vote_average * (1 + QUALITY_INFLUENCE)
+      : -movie.vote_average * (1 - QUALITY_INFLUENCE);
 
-    // console.log('Rating weight:', ratingWeight);
     if (alreadySeen) {
-      // Si ya está en la lista de vistas, actualizar solo el vector del usuario
       const newVector = { ...userVector };
       movie.genre_ids.forEach(genre => {
         newVector[genre] = (newVector[genre] || 0) + ratingWeight;
-        // console.log("Genre:", genre, "Points:", newVector[genre]);
       });
       setUserVector(newVector);
     } else {
-      // Si no está en la lista, agregarla y actualizar el vector del usuario
       const newVector = { ...userVector };
       movie.genre_ids.forEach(genre => {
         newVector[genre] = (newVector[genre] || 0) + ratingWeight;
       });
 
-      // Mover película desde recomendaciones a vistas
       const updatedRecommendedMovies = recommendedMovies.filter(m => m.id !== movie.id);
       setRecommendedMovies(updatedRecommendedMovies);
 
-      // Actualizar la lista de películas que el usuario odie
       const updatedHatedMovies = hatedMovies.filter(m => m.id !== movie.id);
       setHatedMovies(updatedHatedMovies);
 
       setSeenMovies([...seenMovies, movie]);
       setUserVector(newVector);
 
-      // Actualizar la lista de películas populares si es necesario
       const updatedMovies = movies.filter(m => m.id !== movie.id);
       setMovies(updatedMovies);
 
-      // Actualizar recomendaciones y películas odiadas
       updateRecommendations(updatedMovies, newVector);
     }
   };
 
-  // Función para normalizar el vector del usuario
   const normalizeUserVector = (vector) => {
     const totalPoints = Object.values(vector).reduce((total, value) => total + value, 0);
     const normalizedVector = {};
@@ -121,7 +153,6 @@ export default function MoviesPage() {
     return normalizedVector;
   };
 
-  // Función para actualizar las películas recomendadas y odiadas
   const updateRecommendations = (moviesList, userVector) => {
     const normalizedUserVector = normalizeUserVector(userVector);
 
@@ -132,8 +163,8 @@ export default function MoviesPage() {
       return { ...movie, score };
     });
 
-    const highScoreMovies = scoredMovies.filter(movie => movie.score > 0.45); // Películas recomendadas
-    const lowScoreMovies = scoredMovies.filter(movie => movie.score < -0.1); // Películas que probablemente se odien
+    const highScoreMovies = scoredMovies.filter(movie => movie.score > 0.45);
+    const lowScoreMovies = scoredMovies.filter(movie => movie.score < -0.1);
 
     setRecommendedMovies(highScoreMovies);
     setHatedMovies(lowScoreMovies);
@@ -141,52 +172,104 @@ export default function MoviesPage() {
 
   return (
     <div className="bg-gray-900 min-h-screen text-white py-8">
-      <h1 className="text-4xl font-bold text-center">Movies you&apos;ve already seen</h1>
+      {/* <h1 className="text-4xl font-bold text-center">Movies you've already seen</h1>
       <div className="flex flex-wrap gap-4 p-8">
         {seenMovies.map((movie) => (
           <Movie movie={movie} key={movie.id} isSeen={true} />
         ))}
-      </div>
+      </div> */}
 
-      <h1 className="text-4xl font-bold text-center">Popular Movies</h1>
-      <div className="flex flex-wrap gap-4 p-8">
-        {movies.map((movie) => (
-          <Movie
-            movie={movie}
-            key={movie.id}
-            isSeen={seenMovies.some(seenMovie => seenMovie.id === movie.id)}
-            onRating={(type) => handleRating(movie, type)}
-          />
-        ))}
-      </div>
+<div className="text-center mb-8">
+  <div className="flex items-center justify-center max-w-md mx-auto">
+    <div className="flex items-center w-full px-4 py-2 bg-gray-800 rounded-lg shadow-lg">
+      <input
+        type="text"
+        className="w-full bg-transparent text-white placeholder-gray-400 focus:outline-none"
+        placeholder="Search for a movie..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
+      <button
+        type="button"
+        className="text-white ml-3 focus:outline-none focus:ring-0"
+      >
+        <IoSearchSharp size={24} />
+      </button>
+    </div>
+  </div>
+</div>
 
-      <h1 className="text-4xl font-bold text-center">Recommended movies <span className='opacity-50'>by AI</span></h1>
-      <div className="flex flex-wrap gap-4 p-8">
-        {recommendedMovies.map((movie) => (
-          <Movie
-            movie={movie}
-            key={movie.id}
-            isSeen={false}
-            onRating={(type) => handleRating(movie, type)}
-          />
-        ))}
-      </div>
 
-      <h1 className="text-4xl font-bold text-center">Movies you will hate <span className='opacity-50'>according to AI</span></h1>
-      <div className="flex flex-wrap gap-4 p-8">
-        {hatedMovies.map((movie) => (
-          <Movie
-            movie={movie}
-            key={movie.id}
-            isSeen={false}
-            onRating={(type) => handleRating(movie, type)}
-          />
-        ))}
-      </div>
+
+      {searchResults.length > 0 && (
+        <>
+          <div className="flex flex-wrap gap-4 p-8">
+            {searchResults.map((movie) => (
+              <Movie
+                movie={movie}
+                key={movie.id}
+                isSeen={seenMovies.some(seenMovie => seenMovie.id === movie.id)}
+                onRating={(type) => handleRating(movie, type)}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+{recommendedMovies.length > 0 && (
+            <>
+              <h1 className="text-4xl font-bold text-center">Recommended Movies</h1>
+              <div className="flex flex-wrap gap-4 p-8">
+                {recommendedMovies.map((movie) => (
+                  <Movie
+                    movie={movie}
+                    key={movie.id}
+                    isSeen={seenMovies.some(seenMovie => seenMovie.id === movie.id)}
+                    onRating={(type) => handleRating(movie, type)}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+      {!searchQuery && (
+        <>
+          <h1 className="text-4xl font-bold text-center">Rate some movies to be able to recommend new ones</h1>
+          <div className="flex flex-wrap gap-4 p-8">
+            {movies.map((movie) => (
+              <Movie
+                movie={movie}
+                key={movie.id}
+                isSeen={seenMovies.some(seenMovie => seenMovie.id === movie.id)}
+                onRating={(type) => handleRating(movie, type)}
+              />
+            ))}
+          </div>
+
+
+
+          {hatedMovies.length > 0 && (
+            <>
+              <h1 className="text-4xl font-bold text-center">Movies You Might Hate</h1>
+              <div className="flex flex-wrap gap-4 p-8">
+                {hatedMovies.map((movie) => (
+                  <Movie
+                    movie={movie}
+                    key={movie.id}
+                    isSeen={seenMovies.some(seenMovie => seenMovie.id === movie.id)}
+                    onRating={(type) => handleRating(movie, type)}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 }
 
+// Componente Movie
 // Componente Movie
 const Movie = ({ movie, onRating = () => { }, isSeen }) => {
   const roundedVoteAverage = Math.round(movie.vote_average);
