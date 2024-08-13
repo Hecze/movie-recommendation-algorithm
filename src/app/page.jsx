@@ -171,7 +171,7 @@ export default function MoviesPage() {
   };
 
   return (
-    <div className="bg-gray-900 min-h-screen text-white py-8">
+    <div className="bg-gray-900 min-h-screen text-white py-8 px-4">
       {/* <h1 className="text-4xl font-bold text-center">Movies you've already seen</h1>
       <div className="flex flex-wrap gap-4 p-8">
         {seenMovies.map((movie) => (
@@ -201,7 +201,7 @@ export default function MoviesPage() {
 
       {searchResults.length > 0 && (
         <>
-          <div className="flex flex-wrap gap-4 p-8">
+          <div className="flex flex-wrap gap-4 p-4">
             {searchResults.map((movie) => (
               <Movie
                 movie={movie}
@@ -216,8 +216,8 @@ export default function MoviesPage() {
 
       {recommendedMovies.length > 0 && (
         <>
-          <h1 className="text-4xl font-bold text-center">Recommended Movies</h1>
-          <div className="flex flex-wrap justify-center  gap-4 p-8">
+          <h1 className="text-xl xl:4xl font-bold text-center">Recommended Movies</h1>
+          <div className="flex flex-wrap justify-center  gap-4 p-4">
             {recommendedMovies.map((movie) => (
               <Movie
                 movie={movie}
@@ -232,8 +232,8 @@ export default function MoviesPage() {
 
       {!searchQuery && (
         <>
-          <h1 className="text-4xl font-bold text-center">Rate some movies to be able to recommend new ones</h1>
-          <div className="flex flex-wrap justify-center gap-4 p-8">
+          <h1 className="text-xl xl:4xl font-bold text-center">Rate some movies to be able to recommend new ones</h1>
+          <div className="flex flex-wrap justify-center gap-4 p-4">
             {movies.map((movie) => (
               <Movie
                 movie={movie}
@@ -248,7 +248,7 @@ export default function MoviesPage() {
 
           {hatedMovies.length > 0 && (
             <>
-              <h1 className="text-4xl font-bold text-center">Movies You Might Hate</h1>
+              <h1 className="text-xl xl:4xl font-bold text-center">Movies You Might Hate</h1>
               <div className="flex flex-wrap justify-center gap-4 p-8">
                 {hatedMovies.map((movie) => (
                   <Movie
