@@ -141,7 +141,7 @@ export default function MoviesPage() {
 
   return (
     <div className="bg-gray-900 min-h-screen text-white py-8">
-      <h1 className="text-4xl font-bold text-center">Movies you've already seen</h1>
+      <h1 className="text-4xl font-bold text-center">Movies you&apos;ve already seen</h1>
       <div className="flex flex-wrap gap-4 p-8">
         {seenMovies.map((movie) => (
           <Movie movie={movie} key={movie.id} isSeen={true} />
