@@ -1,6 +1,38 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Movie Recommendation Algorithm with Quality Influence
 
-## Getting Started
+This project implements a movie recommendation system that combines content-based filtering with dynamic adjustments based on movie quality. The system provides personalized movie recommendations by incorporating user ratings and the quality of the movies into the recommendation process.
+
+## Purpose
+
+The primary goals of this project are to:
+- Investigate and explore movie recommendation algorithms.
+- Learn about combining content-based filtering with quality adjustments.
+- Demonstrate the implementation and effectiveness of this algorithm.
+
+## Algorithm Overview
+
+The recommendation algorithm operates as follows:
+
+1. **Data Collection**: Fetches movie and genre data from The Movie Database (TMDb) API.
+2. **User Ratings**: Allows users to rate movies with likes or dislikes. These ratings influence the recommendation engine.
+3. **Quality Adjustment**: The impact of a rating (like or dislike) is adjusted based on the movie's quality (rating score). Dislikes on high-rated movies have a stronger effect, while likes on low-rated movies have an enhanced effect.
+4. **Recommendation Calculation**: Uses a user-specific vector to calculate scores for movies based on genre preferences and quality adjustments.
+5. **Filtering**: Provides a list of recommended movies and a separate list of movies that the user is likely to dislike.
+
+## Features
+
+- **Content-Based Filtering**: Recommends movies based on genre preferences.
+- **Quality-Based Adjustment**: Modifies the impact of ratings according to the quality of movies.
+- **Personalized Recommendations**: Tailors movie suggestions based on user feedback and interactions.
+- **Dynamic Filtering**: Separates recommended movies from those likely to be disliked.
+
+## Modifications Made
+
+1. **Rating Influence**: The system was modified to adjust the influence of likes and dislikes based on movie quality. Dislikes have a stronger impact on high-rated movies, while likes significantly enhance the recommendation for low-rated movies.
+2. **Vector Normalization**: Implemented normalization of the user vector to ensure balanced influence of different genres based on user interactions.
+3. **Dynamic Adjustment**: Incorporated dynamic adjustments to the recommendation process to better reflect user preferences and movie ratings.
+
+## Installation and Usage
 
 First, run the development server:
 
